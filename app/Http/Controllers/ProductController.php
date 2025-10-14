@@ -117,4 +117,15 @@ class ProductController extends Controller
         // Redirect back to the page the user came from
         return redirect()->back()->with('success', 'Product deleted successfully.');
     }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        $products = Product::where('name', 'like', '%' . $query . '%')
+            ->orWhere('description', 'like', '%' . $query . '%')
+            ->get();
+
+        return view('products.search', compact('products', 'query'));
+    }
 }

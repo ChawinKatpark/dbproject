@@ -97,57 +97,36 @@
         @endif
     </header>
 
-        <main class="flex-grow mt-10 px-6 lg:px-8">
-            <br><br><br><br>
-            <!-- Hero Section -->
-            <section class="max-w-7xl mx-auto">
-                <div class="relative rounded overflow-hidden h-[180px] w-full bg-cover bg-center flex items-center justify-center text-white"
-                    style="background-image: url('{{ asset('images/banner.png') }}');">
-                </div>
-            </section>
+    <br><br><br><br>
 
-            <!-- Featured Categories -->
-            <section class="max-w-7xl mx-auto mt-8 mb-8">
-                <h2 class="text-2xl font-semibold mb-6" style="color: #000000ff; font-family: 'Instrument Sans', sans-serif;">
-                    Categories
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    @foreach($categories as $category)
-                        <a href="{{ route('categories.show', $category->id) }}" class="flex items-center gap-5 bg-[#D6D6D6] p-4 rounded-lg border-2 border-[#5c7266] border-opacity-80 hover:shadow-md transition">
-                            <img src="{{ $category->image_url }}" alt="{{ $category->name }}" class="w-12 h-12 object-cover rounded-full">
-                            <span class="text-lg font-medium text-[#000000]" style="font-family: 'Instrument Sans', sans-serif;">
-                                {{ $category->name }}
-                            </span>
-                        </a>
-                    @endforeach
-                </div>
-            </section>
+    <section class="max-w-7xl mx-auto mt-10">
+        <h2 class="text-2xl font-semibold mb-6" style="color: #000000ff; font-family: 'Instrument Sans', sans-serif;">
+            Search results for: <span class="text-green-800">"{{ $query }}"</span>
+        </h2>
 
-            <!-- Featured Products -->
-            <section class="max-w-7xl mx-auto mt-10">
-                <h2 class="text-2xl font-semibold mb-6" style="color: #000000ff; font-family: 'Instrument Sans', sans-serif;">
-                    Products
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        @foreach($products as $product)
-            <a href="{{ route('products.show', $product->id) }}" class="block">
-                <div class="bg-[#D6D6D6] rounded-lg p-4 shadow hover:shadow-md transition flex flex-col items-start border-2 border-[#5c7266] border-opacity-80 cursor-pointer">
-                    <div class="w-[260px] h-[200px] overflow-hidden rounded mb-4">
-                        <img class="w-full h-full object-cover" src="{{ $product->image_url }}" alt="{{ $product->name }}">
-                    </div>
-                    <h5 class="text-lg font-semibold text-black text-left w-full">{{ $product->name }}</h5>
-                    <p class="text-base font-bold text-left w-full" style="color: #2e9830ff;">
-                        ฿{{ number_format($product->price) }}
-                        @if($product->stock <= 0)
-                            <span class="text-red-600 font-normal ml-1">(out of stock)</span>
-                        @endif
-                    </p>
-                </div>
-            </a>
-        @endforeach
-    </div>
-            </section>
-        </main>
+        @if($products->count())
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                @foreach($products as $product)
+                    <a href="{{ route('products.show', $product->id) }}" class="block">
+                        <div class="bg-[#D6D6D6] rounded-lg p-4 shadow hover:shadow-md transition flex flex-col items-start border-2 border-[#5c7266] border-opacity-80 cursor-pointer">
+                            <div class="w-[260px] h-[200px] overflow-hidden rounded mb-4">
+                                <img class="w-full h-full object-cover" src="{{ $product->image_url }}" alt="{{ $product->name }}">
+                            </div>
+                            <h5 class="text-lg font-semibold text-black text-left w-full">{{ $product->name }}</h5>
+                            <p class="text-base font-bold text-left w-full" style="color: #2e9830ff;">
+                                ฿{{ number_format($product->price) }}
+                                @if($product->stock <= 0)
+                                    <span class="text-red-600 font-normal ml-1">(out of stock)</span>
+                                @endif
+                            </p>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @else
+            <p class="text-lg text-black mt-4">No products found :(</p>
+        @endif
+    </section>
 
         @if (Route::has('login'))
             <div class="h-14 hidden lg:block"></div>

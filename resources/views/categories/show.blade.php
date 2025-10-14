@@ -27,13 +27,32 @@
     <body class="bg-[#8DA79C] text-[#1b1b18] flex flex-col min-h-screen">
     <header class="w-full bg-[#5c7266] text-white px-6 py-6 lg:px-8 shadow-lg fixed top-0 left-0 z-50">
         @if (Route::has('login'))
-            <nav class="max-w-8xl mx-auto flex justify-between items-center">
-                <!-- Left: Logo / Shop Name -->
-                <div class="text-[2rem] lg:text-[2.5rem] tracking-wide" style="font-family: 'Playfair Display', serif;">
-                    <a href="{{ url('/') }}" class="hover:text-[#e6ddd1] transition">Mystery Shop</a>
+            <nav class="max-w-8xl mx-auto flex justify-between items-center flex-wrap gap-4">
+                <!-- Left: Logo -->
+                <div class="flex items-center gap-6 flex-grow">
+                    <div class="text-[2rem] lg:text-[2.5rem] tracking-wide" style="font-family: 'Playfair Display', serif;">
+                        <a href="{{ url('/') }}" class="hover:text-[#e6ddd1] transition">Mystery Shop</a>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <form action="{{ route('search') }}" method="GET" class="flex items-center bg-white rounded-full px-4 py-1 shadow w-full max-w-sm">
+                        <input 
+                            type="text" 
+                            name="query" 
+                            placeholder="Search products..." 
+                            class="bg-transparent focus:outline-none focus:ring-0 border-0 text-[#1b1b18] flex-grow"
+                        >
+                        <button type="submit" class="ml-2 text-[#5c7266] hover:text-[#2e9830ff]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
 
-                <!-- Right: Auth Buttons -->
+                <!-- Right: Auth Buttons and Cart -->
                 <div class="flex items-center gap-5 text-sm" style="font-family: 'Instrument Sans', sans-serif;">
                     @auth
                         @php
@@ -52,25 +71,20 @@
                             </span>
                         </a>
 
-                        <!-- My Account (Dashboard) -->
+                        <!-- Account + Admin -->
                         <a href="{{ url('/profile') }}" class="bg-[#e6ddd1] text-[#5c7266] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition">
                             My Account
                         </a>
-              
-                        <!-- Admin-only: Manage Button -->
                         @if(auth()->user()->is_admin)
-                            <a href="{{ url('/admin/products') }}"
-                            class="bg-[#e6ddd1] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition" style="color: #690f0fff">
+                            <a href="{{ url('/admin/products') }}" class="bg-[#e6ddd1] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition" style="color: #690f0fff">
                                 Manage
                             </a>
                         @endif
                     @else
-                        <!-- Guest: Login + Register -->
                         <a href="{{ route('login') }}"
                         class="bg-[#e6ddd1] text-[#5c7266] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition hover:underline">
                             Log in
                         </a>
-
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}"
                             class="bg-[#e6ddd1] text-[#5c7266] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition hover:underline">

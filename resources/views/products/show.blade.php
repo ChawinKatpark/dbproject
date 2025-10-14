@@ -27,13 +27,32 @@
     <body class="bg-[#8DA79C] text-[#1b1b18] flex flex-col min-h-screen">
     <header class="w-full bg-[#5c7266] text-white px-6 py-6 lg:px-8 shadow-lg fixed top-0 left-0 z-50">
         @if (Route::has('login'))
-            <nav class="max-w-8xl mx-auto flex justify-between items-center">
-                <!-- Left: Logo / Shop Name -->
-                <div class="text-[2rem] lg:text-[2.5rem] tracking-wide" style="font-family: 'Playfair Display', serif;">
-                    <a href="{{ url('/') }}" class="hover:text-[#e6ddd1] transition">Mystery Shop</a>
+            <nav class="max-w-8xl mx-auto flex justify-between items-center flex-wrap gap-4">
+                <!-- Left: Logo -->
+                <div class="flex items-center gap-6 flex-grow">
+                    <div class="text-[2rem] lg:text-[2.5rem] tracking-wide" style="font-family: 'Playfair Display', serif;">
+                        <a href="{{ url('/') }}" class="hover:text-[#e6ddd1] transition">Mystery Shop</a>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <form action="{{ route('search') }}" method="GET" class="flex items-center bg-white rounded-full px-4 py-1 shadow w-full max-w-sm">
+                        <input 
+                            type="text" 
+                            name="query" 
+                            placeholder="Search products..." 
+                            class="bg-transparent focus:outline-none focus:ring-0 border-0 text-[#1b1b18] flex-grow"
+                        >
+                        <button type="submit" class="ml-2 text-[#5c7266] hover:text-[#2e9830ff]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
 
-                <!-- Right: Auth Buttons -->
+                <!-- Right: Auth Buttons and Cart -->
                 <div class="flex items-center gap-5 text-sm" style="font-family: 'Instrument Sans', sans-serif;">
                     @auth
                         @php
@@ -52,25 +71,20 @@
                             </span>
                         </a>
 
-                        <!-- My Account (Dashboard) -->
+                        <!-- Account + Admin -->
                         <a href="{{ url('/profile') }}" class="bg-[#e6ddd1] text-[#5c7266] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition">
                             My Account
                         </a>
-              
-                        <!-- Admin-only: Manage Button -->
                         @if(auth()->user()->is_admin)
-                            <a href="{{ url('/admin/products') }}"
-                            class="bg-[#e6ddd1] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition" style="color: #690f0fff">
+                            <a href="{{ url('/admin/products') }}" class="bg-[#e6ddd1] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition" style="color: #690f0fff">
                                 Manage
                             </a>
                         @endif
                     @else
-                        <!-- Guest: Login + Register -->
                         <a href="{{ route('login') }}"
                         class="bg-[#e6ddd1] text-[#5c7266] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition hover:underline">
                             Log in
                         </a>
-
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}"
                             class="bg-[#e6ddd1] text-[#5c7266] px-4 py-2 rounded-full font-semibold hover:bg-[#f1e6dc] transition hover:underline">
@@ -93,67 +107,69 @@
     <br><br><br><br>
 
         <div class="pt-32 px-6 md:px-24">
-        <div class="grid grid-cols-1 md:grid-cols-2 items-center">
+    <div class="grid grid-cols-1 md:grid-cols-2 items-center">
 
-
-            {{-- 🖼️ Product Image --}}
-            <div class="flex justify-center">
+        {{-- 🖼️ Product Image --}}
+        <div class="flex justify-center">
+            <div class="w-[400px] h-[400px] rounded-2xl overflow-hidden shadow-md">
                 <img src="{{ $product->image_url }}"
-                    alt="{{ $product->title }}"
-                    class="w-full max-w-sm h-auto rounded-2xl object-cover shadow-md">
-            </div>
-
-            {{-- 📦 Product Details --}}
-            <div class="bg-[#D9D9D9] p-6 rounded-2xl shadow-md w-full space-y-4">
-                <h1 class="text-3xl font-bold">{{ $product->name}}</h1>
-                <p class="text-2xl text-green-600 font-semibold">
-                    ฿{{ number_format($product->price, 0) }}
-                </p>
-
-                <hr class="border-t border-[#2e4238]">
-
-                <p class="text-md text-[#2e4238] leading-relaxed x-6">
-                    {{ $product->description }}
-                </p>
-
-                <hr class="border-t border-[#2e4238]">
-
-                {{-- Quantity + Stock --}}
-                @if($product->stock > 0)
-                <form action="{{ route('cart.store') }}" method="POST" class="flex flex-wrap items-center gap-4">
-                    @csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-
-                    <label class="text-lg font-medium text-[#2e4238]">Quantity:</label>
-
-                    {{-- Quantity Controls --}}
-                    <button type="button" onclick="changeQty(-1)"
-                            class="w-8 h-8 rounded bg-[#5c7266] text-white font-bold">−</button>
-
-                    <input type="number" name="quantity" id="quantity"
-                    value="1" min="1" max="{{ $product->stock }}"
-                    class="w-20 text-center rounded bg-white text-black border border-gray-300">
-
-
-                    <button type="button" onclick="changeQty(1)"
-                            class="w-8 h-8 rounded bg-[#5c7266] text-white font-bold">+</button>
-
-                    <p class="ml-auto text-[#2e4238] font-medium">
-                        In Stock : {{ $product->stock > 999 ? '999+' : $product->stock }}
-                    </p>
-
-                    {{-- Submit --}}
-                    <button type="submit"
-                            class="w-full mt-4 px-6 py-2 bg-[#2e3c46] text-white rounded hover:bg-[#1c2a30] transition">
-                        Add to Cart
-                    </button>
-                </form>
-                @else
-                <p class="text-red-600 font-bold text-lg">Out of Stock</p>
-                @endif
+                     alt="{{ $product->title }}"
+                     class="w-full h-full object-cover">
             </div>
         </div>
+
+        {{-- 📦 Product Details --}}
+        <div class="bg-[#D9D9D9] p-6 rounded-2xl shadow-md w-full space-y-4">
+            <h1 class="text-3xl font-bold">{{ $product->name }}</h1>
+            <p class="text-2xl text-green-600 font-semibold">
+                ฿{{ number_format($product->price, 0) }}
+            </p>
+
+            <hr class="border-t border-[#2e4238]">
+
+            <p class="text-md text-[#2e4238] leading-relaxed x-6">
+                {{ $product->description }}
+            </p>
+
+            <hr class="border-t border-[#2e4238]">
+
+            {{-- Quantity + Stock --}}
+            @if($product->stock > 0)
+            <form action="{{ route('cart.store') }}" method="POST" class="flex flex-wrap items-center gap-4">
+                @csrf
+                <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                <label class="text-lg font-medium text-[#2e4238]">Quantity:</label>
+
+                {{-- Quantity Controls --}}
+                <button type="button" onclick="changeQty(-1)"
+                        class="w-8 h-8 rounded bg-[#5c7266] text-white font-bold">−</button>
+
+                <input type="number" name="quantity" id="quantity"
+                value="1" min="1" max="{{ $product->stock }}"
+                class="w-20 text-center rounded bg-white text-black border border-gray-300">
+
+
+                <button type="button" onclick="changeQty(1)"
+                        class="w-8 h-8 rounded bg-[#5c7266] text-white font-bold">+</button>
+
+                <p class="ml-auto text-[#2e4238] font-medium">
+                    In Stock : {{ $product->stock > 999 ? '999+' : $product->stock }}
+                </p>
+
+                {{-- Submit --}}
+                <button type="submit"
+                        class="w-full mt-4 px-6 py-2 bg-[#2e3c46] text-white rounded hover:bg-[#1c2a30] transition">
+                    Add to Cart
+                </button>
+            </form>
+            @else
+            <p class="text-red-600 font-bold text-lg">Out of Stock</p>
+            @endif
+        </div>
     </div>
+</div>
+
 
 {{-- 🧠 Quantity Script --}}
 <script>

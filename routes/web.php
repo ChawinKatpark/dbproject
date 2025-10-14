@@ -19,6 +19,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::resource('products', ProductController::class)->only(['index','show']);
 Route::resource('categories', CategoryController::class)->only(['index','show']);
+Route::get('/search', [ProductController::class, 'search'])->name('search');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
