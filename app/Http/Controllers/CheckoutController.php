@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
@@ -36,18 +37,12 @@ class CheckoutController extends Controller
 
         $cartItems = Cart::where('user_id', Auth::id())->get();
 
-        // Check if cart is empty
         if ($cartItems->isEmpty()) {
             return redirect()->route('checkout.show')->withErrors(['Your cart is empty!']);
         }
 
-        // Calculate total
         $totalAmount = $cartItems->sum(fn($item) => $item->product->price * $item->quantity);
-
-        // Store slip image
         $slipPath = $request->file('payment_slip')->store('slips', 'public');
-
-        // Combine full address
         $fullAddress = implode(', ', [
             $request->shipping_address,
             $request->city,
@@ -56,37 +51,33 @@ class CheckoutController extends Controller
             $request->country,
         ]);
 
-        // Create order
-        $order = Order::create([
-            'user_id'           => Auth::id(),
-            'shipping_address'  => $fullAddress,
-            'total_amount'      => $totalAmount,
-            'status'            => 'pending',
-            'payment_time'      => $request->payment_time,
-            'payment_slip_path' => $slipPath,
-            'payment_status'    => 'pending',
-        ]);
-
-        // Create order items
-        foreach ($cartItems as $cartItem) {
-            OrderItem::create([
-                'order_id'   => $order->id,
-                'product_id' => $cartItem->product_id,
-                'quantity'   => $cartItem->quantity,
-                'price'      => $cartItem->product->price,
+        DB::transaction(function () use ($cartItems, $totalAmount, $slipPath, $fullAddress, $request) {
+            $order = Order::create([
+                'user_id'           => Auth::id(),
+                'shipping_address'  => $fullAddress,
+                'total_amount'      => $totalAmount,
+                'status'            => 'pending',
+                'payment_time'      => $request->payment_time,
+                'payment_slip_path' => $slipPath,
+                'payment_status'    => 'pending',
             ]);
 
-            // Decrease product stock
-            $product = $cartItem->product;
-            $product->stock = max($product->stock - $cartItem->quantity, 0); // prevent negative stock
-            $product->save();
-        }
+            foreach ($cartItems as $cartItem) {
+                OrderItem::create([
+                    'order_id'   => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity'   => $cartItem->quantity,
+                    'price'      => $cartItem->product->price,
+                ]);
 
-        // Clear cart
-        Cart::where('user_id', Auth::id())->delete();
+                $product = $cartItem->product;
+                $product->stock = max($product->stock - $cartItem->quantity, 0);
+                $product->save();
+            }
 
-        // Redirect back with session message (for success toast)
-        return redirect()->route('checkout.show')
-        ->with('order_success', 'Purchase successful!');
+            Cart::where('user_id', Auth::id())->delete();
+        });
+
+        return redirect()->route('checkout.show')->with('order_success', 'Purchase successful!');
     }
 }

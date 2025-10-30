@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -69,20 +70,22 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $product = Product::findOrFail($request->product_id);
+        DB::transaction(function () use ($request) {
+            $product = Product::findOrFail($request->product_id);
 
-        if ($request->quantity > $product->stock) {
-            return redirect()->route('cart.index')
-                ->with('error', "Sorry, only {$product->stock} units available for {$product->name}.");
-        }
+            if ($request->quantity > $product->stock) {
+                throw new \Exception("Sorry, only {$product->stock} units available for {$product->name}.");
+            }
 
-        Cart::updateOrCreate(
-            ['user_id' => Auth::id(), 'product_id' => $request->product_id],
-            ['quantity' => $request->quantity]
-        );
+            Cart::updateOrCreate(
+                ['user_id' => Auth::id(), 'product_id' => $request->product_id],
+                ['quantity' => $request->quantity]
+            );
+        });
 
         return redirect()->route('home')->with('success', 'Product added to cart successfully.');
     }
+
 
 
     /**

@@ -37,7 +37,7 @@ class ProductController extends Controller
             'price' => 'required|numeric',
             'stock' => 'required|numeric',
             'image_url' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id'
+            'category_id' => 'nullable|exists:categories,id'
         ]);
 
         Product::create([

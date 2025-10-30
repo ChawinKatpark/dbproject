@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -38,30 +39,27 @@ class OrderController extends Controller
             'payment_status' => 'nullable|string|in:pending,verified,rejected',
         ]);
 
-        $order = Order::with('orderItems.product')->findOrFail($id);
+        DB::transaction(function () use ($request, $id) {
+            $order = Order::with('orderItems.product')->findOrFail($id);
 
-        $oldStatus = $order->status;
-        $newStatus = $request->status;
+            $oldStatus = $order->status;
+            $newStatus = $request->status;
 
-        // Update order fields
-        $order->status = $newStatus;
-        $order->payment_status = $request->payment_status ?? $order->payment_status;
-        $order->save();
+            $order->status = $newStatus;
+            $order->payment_status = $request->payment_status ?? $order->payment_status;
+            $order->save();
 
-        // ✅ Restore stock if order is canceled (since stock was already deducted at checkout)
-        if (
-            $oldStatus !== 'canceled' &&
-            $newStatus === 'canceled'
-        ) {
-            foreach ($order->orderItems as $item) {
-                $product = $item->product;
+            if ($oldStatus !== 'canceled' && $newStatus === 'canceled') {
+                foreach ($order->orderItems as $item) {
+                    $product = $item->product;
 
-                if ($product) {
-                    $product->stock += $item->quantity;
-                    $product->save();
+                    if ($product) {
+                        $product->stock += $item->quantity;
+                        $product->save();
+                    }
                 }
             }
-        }
+        });
 
         return redirect()
             ->route('admin.orders.index')
